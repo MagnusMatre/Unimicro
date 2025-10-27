@@ -14,7 +14,7 @@ def get_all_tasks():
         print("\nTasks:")
         for t in tasks:
             status = "✅" if t["completed"] else "❌"
-            print(f"{t['id']}: {t['title']} | {t['due_date']} | completed : {status}")
+            print(f"{t['id']}: {t['title']} | tags : {t['tags']} | {t['due_date']} | completed : {status}")
 
 
 def get_filtered_tasks(query: str = "", completed: bool | None = None):
@@ -31,7 +31,7 @@ def get_filtered_tasks(query: str = "", completed: bool | None = None):
         print("\nFiltered Tasks:")
         for t in tasks:
             status = "✅" if t["completed"] else "❌"
-            print(f"{t['id']}: {t['title']} {status}")
+            print(f"{t['id']}: {t['title']} | tags : {t['tags']} | {t['due_date']} | completed : {status}")
 
 
 def create_task():
@@ -40,10 +40,19 @@ def create_task():
         print("Title cannot be empty.")
         return
     tags = input("Enter tag(s) use komma to seperate: ").strip()
-    user_input = input("Enter due date (YYYY-MM-DD HH:MM): ")  # e.g. 2025-11-01 15:30
-    due_date = datetime.strptime(user_input, "%Y-%m-%d %H:%M").isoformat()
+    due_date_input = input("Enter due date (YYYY-MM-DD HH:MM): ")  # e.g. 2025-11-01 15:30
+
+    if due_date_input:
+        try:
+            due_date = datetime.strptime(due_date_input, "%Y-%m-%d %H:%M").isoformat()
+        except ValueError:
+            print("⚠️ Invalid date format. Use YYYY-MM-DD HH:MM (e.g. 2025-11-01 15:30).")
+            return
+    else:
+        due_date = None
+
     print(f"Due date set to: {due_date}")
-    r = requests.post(BASE_URL, json={"title": title, "due_date": due_date or None})
+    r = requests.post(BASE_URL, json={"title": title, "due_date": due_date or None, "tags": tags})
     if r.status_code == 201:
         print("Task created successfully!")
     else:

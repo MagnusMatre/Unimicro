@@ -15,7 +15,7 @@ def get_tasks(db: Session,  query: str = "", completed: bool | None = None):
     if query:
         q = q.filter(or_(
             tables.Task.title.ilike(f"%{query}%"),
-            tables.Task.description.ilike(f"%{query}%")
+            tables.Task.tags.ilike(f"%{query}%")
         ))
     if completed is not None:
         q = q.filter(tables.Task.completed == completed)
@@ -47,7 +47,7 @@ def update_task(db: Session, task_id: int, task: schemas.TaskUpdate):
         db_task.due_date = task.due_date
 
     # Always update the timestamp
-    db_task.updated_at = datetime.utcnow()
+    db_task.updated_at = datetime.datetime.now()
 
     db.commit()
     db.refresh(db_task)
