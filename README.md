@@ -95,77 +95,76 @@ Body (partiell oppdatering):
 * Forfallsdatoer legges inn som `YYYY-MM-DD HH:MM` og lagres i ISO-format
 
 
-
 # 🗂️ Unimicro Task Manager (Python GUI)
 
-A simple and efficient desktop task manager built with  **Python** ,  **Tkinter** , and  **SQLAlchemy** .
+En enkel og effektiv desktop‑oppgavebehandler bygget med  **Python** , **Tkinter** og  **SQLAlchemy** .
 
-It allows you to add, edit, delete, and view tasks — all stored locally in an SQLite database.
+Programmet lar deg legge til, redigere, slette og se oppgaver — alle lagres lokalt i en  **SQLite‑database** .
 
 ---
 
-## 🚀 Features
+## 🚀 Funksjonalitet
 
-### ✅ Core Functionality
+### ✅ Kjernemuligheter
 
-* **Add new tasks** via a modal dialog with:
+* **Legg til nye oppgaver** via en modal dialog med:
   * Title
-  * Tags (comma-separated)
-  * Due date (calendar picker)
+  * Tags (komma-separert)
+  * Due Date (kalender‑velger)
   * Time (HH:MM)
-* **Edit existing tasks** in a similar modal
-* **Delete tasks** with confirmation dialog
-* **Mark tasks as completed** with a double-click
-* **Sort tasks** by clicking column headers
-* **Right-click menu** for quick actions:
+* **Rediger eksisterende oppgaver** i en tilsvarende modal
+* **Slett oppgaver** med bekreftelsesdialog
+* **Merk oppgaver som fullført** ved dobbelklikk
+* **Sorter oppgaver** ved å klikke på kolonneoverskrifter
+* **Høyreklikk‑meny** for raske handlinger:
   * View full details
   * Edit
   * Delete
 
 ---
 
-## 🧱 Data Model
+## 🧱 Datamodell
 
-Each task includes the following fields:
+Hver oppgave har følgende felt:
 
-| Field                | Type     | Description                    |
-| -------------------- | -------- | ------------------------------ |
-| **id**         | Integer  | Unique identifier              |
-| **title**      | String   | Short description of the task  |
-| **tags**       | String   | Comma-separated keywords       |
-| **completed**  | Boolean  | Whether the task is done       |
-| **due_date**   | DateTime | When the task is due           |
-| **created_at** | DateTime | When the task was created      |
-| **updated_at** | DateTime | When the task was last updated |
+| Felt                 | Type     | Beskrivelse                      |
+| -------------------- | -------- | -------------------------------- |
+| **id**         | Integer  | Unik identifikator               |
+| **title**      | String   | Kort beskrivelse av oppgaven     |
+| **tags**       | String   | Komma-separerte nøkkelord       |
+| **completed**  | Boolean  | Om oppgaven er fullført         |
+| **due_date**   | DateTime | Når oppgaven skal være ferdig  |
+| **created_at** | DateTime | Når oppgaven ble opprettet      |
+| **updated_at** | DateTime | Når oppgaven sist ble oppdatert |
 
 ---
 
-## 💻 GUI Overview
+## 💻 GUI‑oversikt
 
-### Main Window
+### Hovedvindu
 
-* Displays all tasks in a sortable table
-* Columns:  **Title** ,  **Tags** ,  **Due Date** , **Completed**
-* Header buttons:
+* Viser alle oppgaver i en sortérbar tabell
+* Kolonner:  **Title** ,  **Tags** ,  **Due Date** , **Completed**
+* Knapper i header:
   * ➕ **Add Task**
   * ✏️ **Edit Task**
   * 🗑️ **Delete Task**
 
 ### Add/Edit Modal
 
-* Non-resizable popup window
-* Inputs for:
+* Ikke‑resizable popup‑vindu
+* Inputfelt for:
   * Title
   * Tags
-  * Due Date (calendar widget)
-  * Time (manual entry)
-* Buttons:
+  * Due Date (kalenderwidget)
+  * Time (manuell inntasting)
+* Knapper:
   * 💾 **Save**
   * ❌ **Cancel**
 
-### Task Details (Right-Click → View Details)
+### Task Details (Høyreklikk → View Details)
 
-* Shows all task information:
-  * Title, Tags, Completion status
+* Viser all informasjon om oppgaven:
+
+  * Title, Tags, Completed
   * Due Date, Created At, Updated At
-* Close button to exit the modal
