@@ -97,9 +97,9 @@ Body (partiell oppdatering):
 
 # 🗂️ Unimicro Task Manager (Python GUI)
 
-En enkel og effektiv desktop‑oppgavebehandler bygget med  **Python** , **Tkinter** og  **SQLAlchemy** .
+En enkel og effektiv desktop‑oppgavebehandler bygget med  **Python og Tkinter**
 
-Programmet lar deg legge til, redigere, slette og se oppgaver — alle lagres lokalt i en  **SQLite‑database** .
+Programmet lar deg legge til, redigere, slette og se oppgaver
 
 ---
 
