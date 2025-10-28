@@ -33,8 +33,8 @@ class TaskManagerApp:
         header.pack(fill="x", padx=10, pady=10)
         ttk.Label(header, text="🗂️ Task List", font=("Arial", 16, "bold")).pack(side="left")
 
-        ttk.Button(header, text="+ Add Task", command=self.open_add_modal).pack(side="right", padx=5)
-        ttk.Button(header, text="🗑️ Delete Task", command=self.delete_task).pack(side="right", padx=5)
+        ttk.Button(header, text="➕ Add Task", command=self.open_add_modal).pack(side="right", padx=5)
+        ttk.Button(header, text="❌ Delete Task", command=self.delete_task).pack(side="right", padx=5)
         ttk.Button(header, text="✏️ Edit Task", command=self.open_edit_modal).pack(side="right", padx=5)
 
         control_frame = ttk.Frame(root)
@@ -109,15 +109,23 @@ class TaskManagerApp:
             self.tree.delete(i)
 
         for task in filtered_tasks:
-            self.tree.insert(
-                "", "end", iid=task.id,
+            row_id = self.tree.insert(
+                "",
+                "end",
+                iid=task.id,
                 values=(
                     task.title,
                     task.tags or "",
                     task.due_date.strftime("%Y-%m-%d %H:%M") if task.due_date else "",
-                    "✅" if task.completed else "❌"
-                )
+                    "✅" if task.completed else "⚪"
+                ),
             )
+            if not task.completed and task.due_date and task.due_date < datetime.now():
+                self.tree.item(row_id, tags=("overdue",))
+
+        # Configure the overdue tag style once
+        self.tree.tag_configure("overdue", background="#ffcccc")  # light red/pink background
+
 
 
 
