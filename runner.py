@@ -9,20 +9,12 @@ BACKEND_PATH = "src/main.py"
 GUI_PATH = "src/gui.py"
 COMPOSE_FILE = "docker-compose.yml"
 
-def check_docker():
-    try:
-        subprocess.run(["docker", "info"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("Docker is running.")
-    except subprocess.CalledProcessError:
-        print("Docker is not running. Please start Docker Desktop manually.")
-        sys.exit(1)
-
 def start_docker_compose():
     if os.path.exists(COMPOSE_FILE):
         print("Starting Docker Compose services...")
         subprocess.run(["docker", "compose", "up", "-d"], check=True)
     else:
-        print("No docker-compose.yml file found. Skipping Docker Compose.")
+        print("No docker-compose.yml file found")
 
 def start_backend():
     print("Starting FastAPI backend...")
@@ -39,7 +31,6 @@ def start_gui():
     return gui_proc
 
 def main():
-    check_docker()
     start_docker_compose()
 
     backend_proc = start_backend()
