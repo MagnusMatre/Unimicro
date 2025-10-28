@@ -94,7 +94,6 @@ Body (partiell oppdatering):
 * `cli.py` gir enkel interaktiv terminal for å opprette, oppdatere og slette oppgaver
 * Forfallsdatoer legges inn som `YYYY-MM-DD HH:MM` og lagres i ISO-format
 
-
 # 🗂️ Unimicro Task Manager (Python GUI)
 
 En enkel og effektiv desktop‑oppgavebehandler bygget med  **Python og Tkinter**
@@ -144,6 +143,8 @@ Hver oppgave har følgende felt:
 ### Hovedvindu
 
 * Viser alle oppgaver i en sortérbar tabell
+* Søkefelt
+* Filtrering på fullført status
 * Kolonner:  **Title** ,  **Tags** ,  **Due Date** , **Completed**
 * Knapper i header:
   * ➕ **Add Task**

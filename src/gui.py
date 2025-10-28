@@ -25,6 +25,10 @@ class TaskManagerApp:
         self.sort_reverse = False
         self.search_query = tk.StringVar()
         self.completed_filter = tk.StringVar(value="all")
+        self.search_var = tk.StringVar()
+        self.filter_var = tk.StringVar(value="all")
+        self.tasks = []  # Cached tasks from DB
+        
         header = ttk.Frame(root)
         header.pack(fill="x", padx=10, pady=10)
         ttk.Label(header, text="🗂️ Task List", font=("Arial", 16, "bold")).pack(side="left")
@@ -33,20 +37,20 @@ class TaskManagerApp:
         ttk.Button(header, text="🗑️ Delete Task", command=self.delete_task).pack(side="right", padx=5)
         ttk.Button(header, text="✏️ Edit Task", command=self.open_edit_modal).pack(side="right", padx=5)
 
-        search_frame = ttk.Frame(root)
-        search_frame.pack(fill="x", padx=10, pady=(0, 5))
+        control_frame = ttk.Frame(root)
+        control_frame.pack(fill="x", padx=10, pady=(0, 10))
 
-        # Left-aligned search
-        ttk.Label(search_frame, text="Search:").pack(side="left")
-        search_entry = ttk.Entry(search_frame, textvariable=self.search_query, width=30)
-        search_entry.pack(side="left", padx=5)
-        search_entry.bind("<KeyRelease>", lambda e: self.refresh_tasks())
+        ttk.Label(control_frame, text="Search:").pack(side="left")
+        search_entry = ttk.Entry(control_frame, textvariable=self.search_var, width=25)
+        search_entry.pack(side="left", padx=(5, 15))
+        self.search_var.trace_add("write", lambda *args: self.refresh_tasks())
 
-        # Completed filter radio buttons
-        ttk.Label(search_frame, text="Filter:").pack(side="left", padx=(20, 5))
-        ttk.Radiobutton(search_frame, text="All", variable=self.completed_filter, value="all", command=self.refresh_tasks).pack(side="left")
-        ttk.Radiobutton(search_frame, text="Completed", variable=self.completed_filter, value="completed", command=self.refresh_tasks).pack(side="left")
-        ttk.Radiobutton(search_frame, text="Not Completed", variable=self.completed_filter, value="not_completed", command=self.refresh_tasks).pack(side="left")
+        ttk.Label(control_frame, text="Filter:").pack(side="left")
+        for value, text in [("all", "All"), ("completed", "Completed"), ("not_completed", "Not Completed")]:
+            ttk.Radiobutton(
+                control_frame, text=text, variable=self.filter_var, value=value,
+                command=self.refresh_tasks
+            ).pack(side="left", padx=2)
 
 
         columns = ("title", "tags", "due_date", "completed")
@@ -74,52 +78,23 @@ class TaskManagerApp:
             self.sort_column = col
             self.sort_reverse = False
 
-        tasks = self.db.query(tables.Task).all()
-
-        def get_value(task):
-            value = getattr(task, col)
-            if col == "due_date":
-                return value or datetime.max
-            if col == "completed":
-                return 1 if value else 0
-            return value or ""
-
-        sorted_tasks = sorted(tasks, key=get_value, reverse=self.sort_reverse)
-        self.tree.delete(*self.tree.get_children())
-
-        for task in sorted_tasks:
-            self.tree.insert(
-                "", "end", iid=task.id,
-                values=(
-                    task.title,
-                    task.tags or "",
-                    task.due_date.strftime("%Y-%m-%d %H:%M") if task.due_date else "",
-                    "✅" if task.completed else "❌"
-                )
-            )
-
+        self.refresh_tasks()
 
     def refresh_tasks(self):
-        for i in self.tree.get_children():
-            self.tree.delete(i)
+        self.tasks = self.db.query(tables.Task).all()
 
-        query = self.search_query.get().lower()
-        filter_value = self.completed_filter.get()
-        tasks = self.db.query(tables.Task).all()
-        filtered_tasks = []
+        query = self.search_var.get().lower()
+        filtered_tasks = [
+            t for t in self.tasks
+            if query in (t.title or "").lower() or query in (t.tags or "").lower()
+        ]
 
-        for task in tasks:
-            title_match = query in (task.title or "").lower()
-            tags_match = query in (task.tags or "").lower()
-            completed_match = (
-                filter_value == "all" or
-                (filter_value == "completed" and task.completed) or
-                (filter_value == "not_completed" and not task.completed)
-            )
-            if (not query or title_match or tags_match) and completed_match:
-                filtered_tasks.append(task)
+        filter_value = self.filter_var.get()
+        if filter_value == "completed":
+            filtered_tasks = [t for t in filtered_tasks if t.completed]
+        elif filter_value == "not_completed":
+            filtered_tasks = [t for t in filtered_tasks if not t.completed]
 
-        # Sort if a column is selected
         if self.sort_column:
             def get_value(task):
                 value = getattr(task, self.sort_column)
@@ -129,6 +104,9 @@ class TaskManagerApp:
                     return 1 if value else 0
                 return value or ""
             filtered_tasks.sort(key=get_value, reverse=self.sort_reverse)
+
+        for i in self.tree.get_children():
+            self.tree.delete(i)
 
         for task in filtered_tasks:
             self.tree.insert(
@@ -140,6 +118,7 @@ class TaskManagerApp:
                     "✅" if task.completed else "❌"
                 )
             )
+
 
 
     def open_add_modal(self):
