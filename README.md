@@ -104,7 +104,7 @@ Programmet lar deg legge til, redigere, slette og se oppgaver
 
 ## 🚀 Funksjonalitet
 
-### ✅ Kjernemuligheter
+### ✅ Kjernefunksjoner
 
 * **Legg til nye oppgaver** via en modal dialog med:
   * Title
@@ -146,6 +146,7 @@ Hver oppgave har følgende felt:
 * Søkefelt
 * Filtrering på fullført status
 * Kolonner:  **Title** ,  **Tags** ,  **Due Date** , **Completed**
+* Markering med rød bakgrunn vis over forfallsdato (markerer bakgrunnen så det er synlig for fargeblinde også)
 * Knapper i header:
   * ➕ **Add Task**
   * ✏️ **Edit Task**

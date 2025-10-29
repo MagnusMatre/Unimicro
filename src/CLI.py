@@ -40,8 +40,7 @@ def create_task():
         print("Title cannot be empty.")
         return
     tags = input("Enter tag(s) use komma to seperate: ").strip()
-    due_date_input = input("Enter due date (YYYY-MM-DD HH:MM): ")  # e.g. 2025-11-01 15:30
-
+    due_date_input = input("Enter due date (YYYY-MM-DD HH:MM): ") 
     if due_date_input:
         try:
             due_date = datetime.strptime(due_date_input, "%Y-%m-%d %H:%M").isoformat()

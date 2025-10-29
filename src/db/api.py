@@ -1,8 +1,9 @@
 
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from db import crud, database, schemas
+from db import crud, database, schemas, tables
 from sqlalchemy.orm import Session
+from db.authentication import hash_password, verify_password
 
 router = APIRouter()
 
@@ -17,6 +18,13 @@ def get_db():
 def root():
     return {"message": "API is running"}
 
+
+@router.get("/tasks/{task_id}", response_model=schemas.TaskResponse)
+def read_task(task_id: int, db: Session = Depends(get_db)):
+    db_task = crud.get_task(db, task_id=task_id)
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return db_task
 
 @router.get("/tasks", response_model=list[schemas.TaskResponse])
 def list_tasks(db : Session = Depends(get_db), query: str | None = None, completed: bool | None = None):
@@ -44,3 +52,21 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")
     return None
+
+@router.post("/register")
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    if db.query(tables.User).filter(tables.User.username == user.username).first():
+        raise HTTPException(status_code=400, detail="Username already registered")
+
+    hashed_password = hash_password(user.password)
+    new_user = tables.User(username=user.username, password_hash=hashed_password)
+    db.add(new_user)
+    db.commit()
+    return {"message": "User created successfully!"}
+
+@router.post("/login")
+def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(tables.User).filter(tables.User.username == user.username).first()
+    if not db_user or not verify_password(user.password, db_user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    return {"message": "Login successful!"}

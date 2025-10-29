@@ -3,8 +3,6 @@ from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
-
-# Shared fields
 class TaskBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=140)
     tags: Optional[str] = None
@@ -30,3 +28,12 @@ class TaskResponse(TaskBase):
 
     class Config:
         orm_mode = True 
+
+
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+
+class UserLogin(BaseModel):
+    username: str
+    password: str

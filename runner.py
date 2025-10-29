@@ -4,6 +4,7 @@ import sys
 import time
 import os
 import signal
+import asyncio
 
 BACKEND_PATH = "src/main.py"
 GUI_PATH = "src/gui.py"
@@ -34,12 +35,10 @@ def main():
     start_docker_compose()
 
     backend_proc = start_backend()
-    # Give backend a moment to start
     time.sleep(2)
     gui_proc = start_gui()
 
     try:
-        # Wait for GUI to exit
         gui_proc.wait()
     finally:
         print("GUI closed, shutting down backend...")
