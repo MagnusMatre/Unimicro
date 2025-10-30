@@ -10,7 +10,9 @@ class Task(Base):
     due_date = Column(DateTime, nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, nullable=False)
+    created_by = Column(String, nullable=True)
     updated_at = Column(DateTime, nullable=False)
+    updated_by = Column(String, nullable=True)
 
 
 class User(Base):

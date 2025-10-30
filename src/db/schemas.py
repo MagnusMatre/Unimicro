@@ -25,6 +25,8 @@ class TaskResponse(TaskBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    created_by: str
+    updated_by: str
 
     class Config:
         orm_mode = True 

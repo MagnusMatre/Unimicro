@@ -4,3 +4,6 @@ SQLAlchemy==2.0.22
 psycopg2-binary==2.9.7
 pydantic==2.5.1
 requests==2.31.0
+narwhals
+tkcalendar
+aiohttp

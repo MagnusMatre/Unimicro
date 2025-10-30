@@ -4,7 +4,7 @@ Et enkelt REST-API for å administrere oppgaver, bygget med  **FastAPI** ,  **SQ
 
 ### Start hele systemet med runner-scriptet
 
-Scriptet kjører docker-compose, starter backend og GUI
+Scriptet kjører docker-compose, og setter opp backend og GUI
 
 <pre class="overflow-visible!" data-start="648" data-end="676"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span><span>python runner.py</span></span></code></div></div></pre>
 
@@ -87,18 +87,11 @@ Body (partiell oppdatering):
 * Returnerer 204 ved suksess
 * Returnerer 404 hvis oppgaven ikke finnes
 
----
-
-## CLI-grensesnitt
-
-* `cli.py` gir enkel interaktiv terminal for å opprette, oppdatere og slette oppgaver
-* Forfallsdatoer legges inn som `YYYY-MM-DD HH:MM` og lagres i ISO-format
-
 # 🗂️ Unimicro Task Manager (Python GUI)
 
 En enkel og effektiv desktop‑oppgavebehandler bygget med  **Python og Tkinter**
 
-Programmet lar deg legge til, redigere, slette og se oppgaver
+Programmet lar deg legge til, redigere, slette og se oppgaver. Alle API kall blir gjort async for å forhindre utsettelser
 
 ---
 
@@ -120,21 +113,22 @@ Programmet lar deg legge til, redigere, slette og se oppgaver
   * Edit
   * Delete
 
----
 
 ## 🧱 Datamodell
 
 Hver oppgave har følgende felt:
 
-| Felt                 | Type     | Beskrivelse                      |
-| -------------------- | -------- | -------------------------------- |
-| **id**         | Integer  | Unik identifikator               |
-| **title**      | String   | Kort beskrivelse av oppgaven     |
-| **tags**       | String   | Komma-separerte nøkkelord       |
-| **completed**  | Boolean  | Om oppgaven er fullført         |
-| **due_date**   | DateTime | Når oppgaven skal være ferdig  |
-| **created_at** | DateTime | Når oppgaven ble opprettet      |
-| **updated_at** | DateTime | Når oppgaven sist ble oppdatert |
+| Felt                 | Type     | Beskrivelse                                        |
+| -------------------- | -------- | -------------------------------------------------- |
+| **id**         | Integer  | Unik identifikator                                 |
+| **title**      | String   | Kort beskrivelse av oppgaven                       |
+| **tags**       | String   | Komma-separerte nøkkelord                         |
+| **completed**  | Boolean  | Om oppgaven er fullført                           |
+| **due_date**   | DateTime | Når oppgaven skal være ferdig                    |
+| **created_at** | DateTime | Når oppgaven ble opprettet                        |
+| **updated_at** | DateTime | Når oppgaven sist ble oppdatert                   |
+| **created_by** | String   | Brukernavnet til personen som opprettet oppgaven   |
+| **updated_by** | String   | Brukernavnet til personen som sist endret oppgaven |
 
 ---
 
@@ -167,6 +161,53 @@ Hver oppgave har følgende felt:
 ### Task Details (Høyreklikk → View Details)
 
 * Viser all informasjon om oppgaven:
-
   * Title, Tags, Completed
-  * Due Date, Created At, Updated At
+  * Due Date, Created At, Updated At, Created By, Updated By
+
+### Login / Registrer Modal
+
+En enkel modal for å enten logge inn eller å registrere deg
+
+# Tester
+
+Et par enkle CRUD tester, kjør test_crud.py
+
+# Sikkerhet
+
+### Brukerhåndtering og tilgangskontroll
+
+I dette prosjektet er det implementert et enkelt brukersystem for å demonstrere grunnleggende autentisering og bruker-spesifikk datatilgang:
+
+1. **Registrering og innlogging**
+
+   * Brukere kan registrere seg med brukernavn og passord.
+   * Passord lagres sikkert ved først å hashe med SHA-256 og deretter bcrypt.
+   * Innlogging sjekker brukernavn og hashet passord mot databasen.
+2. **Oppgave-eierskap**
+
+   * Hver oppgave har feltene `created_by` og `updated_by` for å spore hvem som opprettet eller sist endret den.
+   * Oppgaver hentes kun for brukeren som eier dem, slik at man kun ser egne oppgaver.
+3. **Tilgangskontroll (grunnleggende)**
+
+   * Selv om full tilgangskontroll ikke er implementert, sikrer API-et at brukere ikke kan endre eller slette oppgaver som tilhører andre.
+   * Alle CRUD-operasjoner filtrerer oppgaver basert på `username`.
+
+
+# Antakelser/avgrensninger
+
+Systemet er utviklet som en forenklet demonstrasjon av et oppgavehåndteringssystem (ERP-lignende løsning) med støtte for flere brukere. Det antas at applikasjonen kjøres i et lukket miljø uten ondsinnede brukere. Brukerautentisering er implementert på et grunnleggende nivå med registrering og innlogging, men uten sesjonshåndtering eller token-basert autentisering. All filtrering og datatilgang baseres på brukernavn sendt fra klienten, og det forutsettes at dette håndteres korrekt. Målet har vært å fokusere på struktur, funksjonalitet og dataintegritet fremfor full sikkerhetsimplementering.
+
+I den nåværende løsningen kan brukere hente alle oppgaver knyttet til et gitt brukernavn ved å sende et enkelt `GET`-kall til API-et, for eksempel `GET /tasks/<brukernavn>`. Dette innebærer at hvem som helst som kjenner et brukernavn, kan hente ut alle tilhørende oppgaver. Det er ingen reell tilgangskontroll implementert. I et produksjonsmiljø ville dette utgjort en alvorlig sikkerhetsrisiko.
+
+
+# Fremtidige forbedringer
+
+Implementere rollebasert tilgang for å skille mellom vanlige brukere, administratorer og andre roller. Innføre strengere rettigheter for å hindre uautorisert tilgang til andre brukeres oppgaver. For å forhindre innsyn til andres data burde autentisering og autorisering implementeres ved hjelp av **tokens** eller **session-basert innlogging.** Med, for eksempel, JWT-baset autentisering kan hver bruker få en signert token hved innloging som må sendes i alle kall.
+
+En windows applikasjon er ikke det fineste, og kan få mer elegante løsninger ved bruk av webløsninger som React.
+
+Måten jeg strukturerte API kallene kan bli forbedres f.eks @router.delete("/tasks/{username}/{task_id}", status_code=204) så trenger man ikke strengt tatt username, og som nevnt tidligere hadde jeg brukt JWT tokens så hadde det blitt en mye mer ryddig løsning på denne fronten.
+
+# Bruk av hjelpemidler
+
+ChatGPT og GitHub Copilot ble benyttet som støtteverktøy under utviklingen. De ble brukt til idéutvikling, forslag til funksjonsstruktur, og generering av deler av kildekoden, spesielt for GUI-komponenter og API-funksjonalitet. Og ble brukt til store deler av Readme-en

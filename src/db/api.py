@@ -1,6 +1,7 @@
 
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from db import crud, database, schemas, tables
 from sqlalchemy.orm import Session
 from db.authentication import hash_password, verify_password
@@ -19,36 +20,32 @@ def root():
     return {"message": "API is running"}
 
 
-@router.get("/tasks/{task_id}", response_model=schemas.TaskResponse)
-def read_task(task_id: int, db: Session = Depends(get_db)):
-    db_task = crud.get_task(db, task_id=task_id)
+@router.get("/tasks/{username}/{task_id}", response_model=schemas.TaskResponse)
+def read_task(username, task_id: int, db: Session = Depends(get_db)):
+    db_task = crud.get_task(username, db, task_id=task_id)
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
 
-@router.get("/tasks", response_model=list[schemas.TaskResponse])
-def list_tasks(db : Session = Depends(get_db), query: str | None = None, completed: bool | None = None):
-    #Need to add custom 400 checks for query params?
-
-    return crud.get_tasks(db=db, query=query, completed=completed)
+@router.get("/tasks/{username}", response_model=list[schemas.TaskResponse])
+def list_tasks(username : str, db : Session = Depends(get_db), query: str | None = None, completed: bool | None = None):
+    return crud.get_tasks(username = username, db=db, query=query, completed=completed)
 
 
-@router.post("/tasks", status_code=201, response_model=schemas.TaskResponse)
-def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
-    print("Parsed task object:", task)
-    print("due_date type:", type(task.due_date))
-    return crud.create_task(db=db, task=task)
+@router.post("/tasks/{username}", status_code=201, response_model=schemas.TaskResponse)
+def create_task(username, task: schemas.TaskCreate, db: Session = Depends(get_db)):
+    return crud.create_task(username=username,db=db, task=task)
 
-@router.put("/tasks/{task_id}", response_model=schemas.TaskResponse)
-def update_task(task_id: int, task: schemas.TaskUpdate, db: Session = Depends(get_db)):
-    updated = crud.update_task(db=db, task_id=task_id, task=task)
+@router.put("/tasks/{username}/{task_id}", response_model=schemas.TaskResponse)
+def update_task(username, task_id: int, task: schemas.TaskUpdate, db: Session = Depends(get_db)):
+    updated = crud.update_task(username,db=db, task_id=task_id, task=task)
     if not updated:
         raise HTTPException(status_code=404, detail="Task not found")
     return updated
 
-@router.delete("/tasks/{task_id}", status_code=204)
-def delete_task(task_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_task(db=db, task_id=task_id)
+@router.delete("/tasks/{username}/{task_id}", status_code=204)
+def delete_task(username, task_id: int, db: Session = Depends(get_db)):
+    success = crud.delete_task(username, db=db, task_id=task_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")
     return None
@@ -57,16 +54,22 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if db.query(tables.User).filter(tables.User.username == user.username).first():
         raise HTTPException(status_code=400, detail="Username already registered")
-
-    hashed_password = hash_password(user.password)
-    new_user = tables.User(username=user.username, password_hash=hashed_password)
-    db.add(new_user)
-    db.commit()
-    return {"message": "User created successfully!"}
+    if crud.create_user(db, user):
+        return JSONResponse(content={"message": "User registered"}, status_code=status.HTTP_201_CREATED)
 
 @router.post("/login")
 def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(tables.User).filter(tables.User.username == user.username).first()
-    if not db_user or not verify_password(user.password, db_user.password_hash):
+    if crud.authenticate_user(db, user.username, user.password):
+        return JSONResponse(content={"message": "Login successful"}, status_code=status.HTTP_200_OK)
+    else:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    return {"message": "Login successful!"}
+    
+    
+
+"""
+NB!!! This is only for testing purposes and should be removed or protected in production.
+"""
+@router.get("/users")
+def get_users(db: Session = Depends(get_db)):
+    users = crud.get_users(db)
+    return users

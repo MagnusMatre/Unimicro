@@ -11,6 +11,7 @@ Base = declarative_base()
 
 def init_db():
     #tables.Task.__table__.drop(bind=engine, checkfirst=True)
+    #tables.User.__table__.drop(bind=engine, checkfirst=True)
     Base.metadata.create_all(bind=engine)
 
 def close_db():

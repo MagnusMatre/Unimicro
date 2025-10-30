@@ -9,13 +9,14 @@ import aiohttp
 API_URL = "http://localhost:8000/tasks"
 
 class TaskManagerApp:
-    def __init__(self, root):
+    def __init__(self, root, current_user):
         self.root = root
+        self.current_user = current_user
         self.root.title("Unimicro Task Manager")
 
         self.all_tasks = []
         self.cached_tasks = {}
-        self.sort_column = None
+        self.sort_column = "due_date"
         self.sort_reverse = False
         self.search_var = tk.StringVar()
         self.filter_var = tk.StringVar(value="all")
@@ -84,7 +85,7 @@ class TaskManagerApp:
 
 
     async def load_tasks_from_api(self):
-        tasks = await self.api_request("GET")
+        tasks = await self.api_request("GET", f"/{self.current_user}")
         if tasks is None:
             return
         self.all_tasks = tasks
@@ -172,7 +173,7 @@ class TaskManagerApp:
             self.run_async(self._delete_task_async, task_id)
 
     async def _delete_task_async(self, task_id):
-        await self.api_request("DELETE", f"/{task_id}")
+        await self.api_request("DELETE", f"/{self.current_user}/{task_id}")
         await self.load_tasks_from_api()
 
     def toggle_complete(self, event):
@@ -183,14 +184,14 @@ class TaskManagerApp:
         self.run_async(self._toggle_complete_async, task_id)
 
     async def _toggle_complete_async(self, task_id):
-        await self.api_request("PUT", f"/{task_id}", json={"completed": not self.cached_tasks[int(task_id)]["completed"]})
+        await self.api_request("PUT", f"/{self.current_user}/{task_id}", json={"completed": not self.cached_tasks[int(task_id)]["completed"]})
         await self.load_tasks_from_api()
 
     async def _save_task_async(self, task_id, data, is_new):
         if is_new:
-            await self.api_request("POST", "", json=data)
+            await self.api_request("POST", f"/{self.current_user}", json=data)
         else:
-            await self.api_request("PUT", f"/{task_id}", json=data)
+            await self.api_request("PUT", f"/{self.current_user}/{task_id}", json=data)
         await self.load_tasks_from_api()
 
     def open_task_modal(self, title, task=None):
@@ -277,16 +278,98 @@ class TaskManagerApp:
         ttk.Label(modal, text=f"Due Date: {task.get('due_date', '-')}").pack(anchor="w", padx=10, pady=5)
         ttk.Label(modal, text=f"Created At: {task.get('created_at', '-')}").pack(anchor="w", padx=10, pady=5)
         ttk.Label(modal, text=f"Updated At: {task.get('updated_at', '-')}").pack(anchor="w", padx=10, pady=5)
+        ttk.Label(modal, text=f"Created By: {task.get('created_by', '-')}").pack(anchor="w", padx=10, pady=5)
+        ttk.Label(modal, text=f"Updated By: {task.get('updated_by', '-')}").pack(anchor="w", padx=10, pady=5)
         ttk.Button(modal, text="Close", command=modal.destroy).pack(pady=10)
+
+
+AUTH_API_URL = "http://localhost:8000"
+class AuthApp:
+    def __init__(self, root):
+        self.root = root
+        self.auth_success = False  # will become True on successful login/register
+        self.current_user = None
+        self.modal = tk.Toplevel(self.root)
+        self.modal.title("Login")
+        self.modal.geometry("300x200")
+        self.modal.resizable(False, False)
+        self.modal.grab_set()  # makes it modal
+
+        ttk.Label(self.modal, text="Username:").pack(anchor="w", padx=10, pady=(10, 0))
+        username_entry = ttk.Entry(self.modal, width=30)
+        username_entry.pack(padx=10, pady=5)
+
+        ttk.Label(self.modal, text="Password:").pack(anchor="w", padx=10)
+        password_entry = ttk.Entry(self.modal, width=30, show="*")
+        password_entry.pack(padx=10, pady=5)
+
+        def login():
+            username = username_entry.get().strip()
+            password = password_entry.get().strip()
+            if not username or not password:
+                messagebox.showerror("Error", "Username and password required.")
+                return
+
+            resp = self.api_request("POST", "/login", json={"username": username, "password": password})
+            status = resp.status_code
+            if status == 200:
+                self.auth_success = True
+                self.current_user = username
+                self.modal.destroy()
+            else:
+                messagebox.showerror("Login Failed", "Invalid credentials.")
+
+        def register():
+            username = username_entry.get().strip()
+            password = password_entry.get().strip()
+            if not username or not password:
+                messagebox.showerror("Error", "Username and password required.")
+                return
+
+            resp = self.api_request("POST", "/register", json={"username": username, "password": password})
+            status = resp.status_code
+            print(status)
+            if status == 201:
+                self.auth_success = True
+                self.current_user = username
+                self.modal.destroy()
+            else:
+                messagebox.showerror("Registration Failed", "Could not register user.")
+
+        button_frame = ttk.Frame(self.modal)
+        button_frame.pack(pady=15) 
+        ttk.Button(button_frame, text="Login", command=login).grid(row=0, column=0, padx=5)
+        ttk.Button(button_frame, text="Register", command=register).grid(row=0, column=1, padx=5)
+        ttk.Button(button_frame, text="Cancel", command=self.modal.destroy).grid(row=0, column=2, padx=5)
+
+    def api_request(self, method, endpoint="", **kwargs):
+        url = f"{AUTH_API_URL}{endpoint}"
+        try:
+            resp = requests.request(method, url, **kwargs)
+            resp.raise_for_status()
+            return resp
+        except requests.RequestException as e:
+            messagebox.showerror("API Error", str(e))
+            return None
+            
 
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = TaskManagerApp(root)
+    root.withdraw() 
 
-    async def tkinter_loop():
-        while True:
-            root.update()
-            await asyncio.sleep(0.01)
+    auth = AuthApp(root)
+    root.wait_window(auth.modal) 
 
-    asyncio.run(tkinter_loop())
+    if auth.auth_success:
+        root.deiconify()  
+        app = TaskManagerApp(root, auth.current_user)
+
+        async def tkinter_loop():
+            while True:
+                root.update()
+                await asyncio.sleep(0.01)
+
+        asyncio.run(tkinter_loop())
+    else:
+        root.destroy()

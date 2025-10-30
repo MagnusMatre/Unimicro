@@ -45,7 +45,7 @@ def test_create_task():
 def test_get_tasks():
     db = next(get_test_db())
     tasks = crud.get_tasks(db)
-    assert len(tasks) >= 1  # At least one task created in previous test
+    assert len(tasks) >= 1
 
 
 def test_update_task():

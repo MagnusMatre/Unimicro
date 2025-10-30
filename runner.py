@@ -22,7 +22,8 @@ def start_backend():
     backend_proc = subprocess.Popen([
         sys.executable, "-m", "uvicorn", "main:app",
         "--reload",
-        "--app-dir", "src"
+        "--app-dir", "src", "--host", "127.0.0.1",
+        "--port", "8000"
     ])
     return backend_proc
 
@@ -31,17 +32,19 @@ def start_gui():
     gui_proc = subprocess.Popen([sys.executable, GUI_PATH])
     return gui_proc
 
+
 def main():
     start_docker_compose()
-
     backend_proc = start_backend()
     time.sleep(2)
     gui_proc = start_gui()
 
     try:
         gui_proc.wait()
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt received — shutting down...")
     finally:
-        print("GUI closed, shutting down backend...")
+        print("GUI closed or interrupted, shutting down backend...")
         try:
             backend_proc.send_signal(signal.SIGINT)
             backend_proc.wait(timeout=5)
