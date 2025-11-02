@@ -293,7 +293,7 @@ class AuthApp:
         self.modal.title("Login")
         self.modal.geometry("300x200")
         self.modal.resizable(False, False)
-        self.modal.grab_set()  # makes it modal
+        self.modal.grab_set() 
 
         ttk.Label(self.modal, text="Username:").pack(anchor="w", padx=10, pady=(10, 0))
         username_entry = ttk.Entry(self.modal, width=30)
