@@ -142,7 +142,7 @@ En enkel modal for å enten logge inn eller å registrere deg
 
 # Tester
 
-Et par enkle CRUD tester, kjør test_crud.py
+Et par enkle CRUD tester, kjør test_api.py
 
 # Sikkerhet
 
